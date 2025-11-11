@@ -64,20 +64,34 @@ object WallService {
         return newPost
     }
 
-    fun printAll() {
-        for (post in posts) {
-            println(post)
+    fun update(post: Post): Boolean {
+        for ((index, existingPost) in posts.withIndex()) {
+            if (existingPost.id == post.id) {
+                posts[index] = post.copy()
+                return true
+            }
         }
+        return false
     }
 
     fun clear() {
         posts = emptyArray()
         lastId = 0
     }
+
+    fun printAll() {
+        println("Всего постов: ${posts.size}")
+        for (post in posts) {
+            println("ID: ${post.id}, Автор: ${post.ownerId}, Текст: ${post.text}")
+        }
+    }
 }
 
-// Функция для запуска программы
+// Точка входа в программу
 fun main() {
+    println("=== Демонстрация работы WallService ===\n")
+
+    // Создаем посты
     val post1 = Post(
         ownerId = 12345,
         fromId = 12345,
@@ -95,12 +109,13 @@ fun main() {
     val post3 = Post(
         ownerId = 11111,
         fromId = 11111,
-        text = "Третий пост с репостами и просмотрами",
+        text = "Третий пост с репостами",
         reposts = Reposts(count = 10, userReposted = false),
         views = Views(count = 150)
     )
 
-    println("=== Добавление постов ===")
+    // Добавляем посты
+    println("--- Добавление постов ---")
     val addedPost1 = WallService.add(post1)
     println("Добавлен пост с ID: ${addedPost1.id}")
 
@@ -110,6 +125,26 @@ fun main() {
     val addedPost3 = WallService.add(post3)
     println("Добавлен пост с ID: ${addedPost3.id}")
 
-    println("\n=== Все посты ===")
+    // Выводим все посты
+    println("\n--- Список всех постов ---")
     WallService.printAll()
+
+    // Обновляем существующий пост
+    println("\n--- Обновление поста ---")
+    val updatePost = addedPost1.copy(
+        text = "Обновленный текст первого поста",
+        likes = Likes(count = 100)
+    )
+    val updateResult = WallService.update(updatePost)
+    println("Обновление поста с ID ${updatePost.id}: ${if (updateResult) "✓ успешно" else "✗ не удалось"}")
+
+    // Выводим после обновления
+    println("\n--- После обновления ---")
+    WallService.printAll()
+
+    // Пытаемся обновить несуществующий пост
+    println("\n--- Попытка обновить несуществующий пост ---")
+    val fakePost = Post(id = 999, text = "Несуществующий пост")
+    val fakeUpdateResult = WallService.update(fakePost)
+    println("Обновление поста с ID ${fakePost.id}: ${if (fakeUpdateResult) "✓ успешно" else "✗ не удалось"}")
 }
