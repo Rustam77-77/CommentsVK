@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "1.9.22"
 }
 
 repositories {
@@ -7,10 +7,10 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("junit:junit:4.13.2")
+    implementation(kotlin("stdlib"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 }
 
 tasks.test {
-    useJUnit()
+    useJUnitPlatform()
 }
