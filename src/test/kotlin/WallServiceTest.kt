@@ -1,80 +1,8 @@
+package ru.netology
+
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-
-data class Comments(
-    val count: Int = 0,
-    val canPost: Boolean = true,
-    val groupsCanPost: Boolean = true,
-    val canClose: Boolean = false,
-    val canOpen: Boolean = false
-)
-
-data class Likes(
-    val count: Int = 0,
-    val userLikes: Boolean = false,
-    val canLike: Boolean = true,
-    val canPublish: Boolean = true
-)
-
-data class Reposts(
-    val count: Int = 0,
-    val userReposted: Boolean = false
-)
-
-data class Views(
-    val count: Int = 0
-)
-
-data class Post(
-    val id: Int = 0,
-    val ownerId: Int = 0,
-    val fromId: Int = 0,
-    val createdBy: Int = 0,
-    val date: Int = 0,
-    val text: String = "",
-    val replyOwnerId: Int = 0,
-    val replyPostId: Int = 0,
-    val friendsOnly: Boolean = false,
-    val postType: String = "post",
-    val signerId: Int = 0,
-    val canPin: Boolean = false,
-    val canDelete: Boolean = false,
-    val canEdit: Boolean = false,
-    val isPinned: Boolean = false,
-    val markedAsAds: Boolean = false,
-    val isFavorite: Boolean = false,
-    val comments: Comments = Comments(),
-    val likes: Likes = Likes(),
-    val reposts: Reposts = Reposts(),
-    val views: Views = Views()
-)
-
-object WallService {
-    private var posts = emptyArray<Post>()
-    private var lastId = 0
-
-    fun add(post: Post): Post {
-        val newPost = post.copy(id = ++lastId)
-        posts += newPost
-        return newPost
-    }
-
-    fun update(post: Post): Boolean {
-        for ((index, existingPost) in posts.withIndex()) {
-            if (existingPost.id == post.id) {
-                posts[index] = post.copy()
-                return true
-            }
-        }
-        return false
-    }
-
-    fun clear() {
-        posts = emptyArray()
-        lastId = 0
-    }
-}
 
 class WallServiceTest {
 
@@ -85,18 +13,51 @@ class WallServiceTest {
 
     @Test
     fun addPostShouldAssignId() {
-        val post = Post(ownerId = 12345, text = "Тестовый пост")
+        val post = Post(
+            ownerId = 12345,
+            text = "Тестовый пост"
+        )
+
         val addedPost = WallService.add(post)
+
         assertNotEquals(0, addedPost.id)
     }
 
     @Test
-    fun updateExisting() {
-        WallService.add(Post(ownerId = 1, text = "Пост 1"))
-        WallService.add(Post(ownerId = 2, text = "Пост 2"))
-        val addedPost = WallService.add(Post(ownerId = 3, text = "Пост 3"))
+    fun addPostWithNullableFields() {
+        val post = Post(
+            ownerId = 100,
+            text = null,
+            fromId = null,
+            views = null,
+            copyright = null
+        )
 
-        val update = addedPost.copy(text = "Обновлен")
+        val addedPost = WallService.add(post)
+
+        assertNotEquals(0, addedPost.id)
+        assertNull(addedPost.text)
+        assertNull(addedPost.fromId)
+        assertNull(addedPost.views)
+    }
+
+    @Test
+    fun updateExisting() {
+        WallService.add(Post(ownerId = 1, text = "Первый пост"))
+        WallService.add(Post(ownerId = 2, text = "Второй пост"))
+        val addedPost = WallService.add(Post(ownerId = 3, text = "Третий пост"))
+
+        val update = addedPost.copy(text = "Обновленный третий пост")
+        val result = WallService.update(update)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun updateWithNullText() {
+        val addedPost = WallService.add(Post(ownerId = 1, text = "Оригинал"))
+
+        val update = addedPost.copy(text = null)
         val result = WallService.update(update)
 
         assertTrue(result)
@@ -104,11 +65,37 @@ class WallServiceTest {
 
     @Test
     fun updateNonExisting() {
-        WallService.add(Post(ownerId = 1, text = "Пост 1"))
+        WallService.add(Post(ownerId = 1, text = "Первый пост"))
+        WallService.add(Post(ownerId = 2, text = "Второй пост"))
 
-        val update = Post(id = 999, text = "Фейк")
+        val update = Post(id = 999, ownerId = 999, text = "Несуществующий пост")
         val result = WallService.update(update)
 
         assertFalse(result)
+    }
+
+    @Test
+    fun updatePreservesOwnerIdAndDate() {
+        val original = WallService.add(Post(ownerId = 123, text = "Оригинал"))
+        val originalDate = original.date
+
+        val update = original.copy(ownerId = 999, text = "Попытка изменить владельца")
+        WallService.update(update)
+
+        assertEquals(123, original.ownerId)
+        assertEquals(originalDate, original.date)
+    }
+
+    @Test
+    fun addMultiplePostsWithMixedNullableFields() {
+        val post1 = WallService.add(Post(ownerId = 1, text = "Пост с текстом"))
+        val post2 = WallService.add(Post(ownerId = 2, text = null, copyright = "© 2025"))
+        val post3 = WallService.add(Post(ownerId = 3, fromId = 100, geo = "Москва"))
+
+        assertNotNull(post1.text)
+        assertNull(post2.text)
+        assertNotNull(post2.copyright)
+        assertNotNull(post3.geo)
+        assertEquals(100, post3.fromId)
     }
 }

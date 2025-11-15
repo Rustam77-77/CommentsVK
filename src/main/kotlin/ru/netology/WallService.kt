@@ -1,59 +1,5 @@
 package ru.netology
 
-// Класс для комментариев
-data class Comments(
-    val count: Int = 0,
-    val canPost: Boolean = true,
-    val groupsCanPost: Boolean = true,
-    val canClose: Boolean = false,
-    val canOpen: Boolean = false
-)
-
-// Класс для лайков
-data class Likes(
-    val count: Int = 0,
-    val userLikes: Boolean = false,
-    val canLike: Boolean = true,
-    val canPublish: Boolean = true
-)
-
-// Класс для репостов
-data class Reposts(
-    val count: Int = 0,
-    val userReposted: Boolean = false
-)
-
-// Класс для просмотров
-data class Views(
-    val count: Int = 0
-)
-
-// Основной класс поста
-data class Post(
-    val id: Int = 0,
-    val ownerId: Int = 0,
-    val fromId: Int = 0,
-    val createdBy: Int = 0,
-    val date: Int = 0,
-    val text: String = "",
-    val replyOwnerId: Int = 0,
-    val replyPostId: Int = 0,
-    val friendsOnly: Boolean = false,
-    val postType: String = "post",
-    val signerId: Int = 0,
-    val canPin: Boolean = false,
-    val canDelete: Boolean = false,
-    val canEdit: Boolean = false,
-    val isPinned: Boolean = false,
-    val markedAsAds: Boolean = false,
-    val isFavorite: Boolean = false,
-    val comments: Comments = Comments(),
-    val likes: Likes = Likes(),
-    val reposts: Reposts = Reposts(),
-    val views: Views = Views()
-)
-
-// Сервис для работы с постами
 object WallService {
     private var posts = emptyArray<Post>()
     private var lastId = 0
@@ -67,7 +13,10 @@ object WallService {
     fun update(post: Post): Boolean {
         for ((index, existingPost) in posts.withIndex()) {
             if (existingPost.id == post.id) {
-                posts[index] = post.copy()
+                posts[index] = post.copy(
+                    ownerId = existingPost.ownerId,
+                    date = existingPost.date
+                )
                 return true
             }
         }
@@ -80,71 +29,8 @@ object WallService {
     }
 
     fun printAll() {
-        println("Всего постов: ${posts.size}")
         for (post in posts) {
-            println("ID: ${post.id}, Автор: ${post.ownerId}, Текст: ${post.text}")
+            println(post)
         }
     }
-}
-
-// Точка входа в программу
-fun main() {
-    println("=== Демонстрация работы WallService ===\n")
-
-    // Создаем посты
-    val post1 = Post(
-        ownerId = 12345,
-        fromId = 12345,
-        text = "Первый пост в системе!",
-        friendsOnly = false,
-        comments = Comments(count = 5, canPost = true),
-        likes = Likes(count = 42, userLikes = true)
-    )
-
-    val post2 = Post(
-        ownerId = 67890,
-        text = "Второй пост с минимальными параметрами"
-    )
-
-    val post3 = Post(
-        ownerId = 11111,
-        fromId = 11111,
-        text = "Третий пост с репостами",
-        reposts = Reposts(count = 10, userReposted = false),
-        views = Views(count = 150)
-    )
-
-    // Добавляем посты
-    println("--- Добавление постов ---")
-    val addedPost1 = WallService.add(post1)
-    println("Добавлен пост с ID: ${addedPost1.id}")
-
-    val addedPost2 = WallService.add(post2)
-    println("Добавлен пост с ID: ${addedPost2.id}")
-
-    val addedPost3 = WallService.add(post3)
-    println("Добавлен пост с ID: ${addedPost3.id}")
-
-    // Выводим все посты
-    println("\n--- Список всех постов ---")
-    WallService.printAll()
-
-    // Обновляем существующий пост
-    println("\n--- Обновление поста ---")
-    val updatePost = addedPost1.copy(
-        text = "Обновленный текст первого поста",
-        likes = Likes(count = 100)
-    )
-    val updateResult = WallService.update(updatePost)
-    println("Обновление поста с ID ${updatePost.id}: ${if (updateResult) "✓ успешно" else "✗ не удалось"}")
-
-    // Выводим после обновления
-    println("\n--- После обновления ---")
-    WallService.printAll()
-
-    // Пытаемся обновить несуществующий пост
-    println("\n--- Попытка обновить несуществующий пост ---")
-    val fakePost = Post(id = 999, text = "Несуществующий пост")
-    val fakeUpdateResult = WallService.update(fakePost)
-    println("Обновление поста с ID ${fakePost.id}: ${if (fakeUpdateResult) "✓ успешно" else "✗ не удалось"}")
 }
